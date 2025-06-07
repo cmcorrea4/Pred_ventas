@@ -385,7 +385,11 @@ if df is not None:
                 st.header("🎯 Predicción para Cliente Individual")
                 st.markdown("Ingresa los datos de un nuevo cliente para obtener una predicción:")
                 
-                with st.expander("📝 Ingresar datos del cliente"):
+                with st.expander("📝 Ingresar datos del cliente", expanded=True):
+                    # Inicializar session_state para mantener valores
+                    if 'nuevo_cliente_data' not in st.session_state:
+                        st.session_state.nuevo_cliente_data = {}
+                    
                     # Crear formulario para nuevo cliente
                     col1, col2 = st.columns(2)
                     
@@ -396,55 +400,74 @@ if df is not None:
                         st.subheader("Datos Demográficos")
                         if 'edad' in variables_predictoras:
                             edad_min, edad_max = int(df['edad'].min()), int(df['edad'].max())
+                            default_edad = st.session_state.nuevo_cliente_data.get('edad', int(df['edad'].median()))
                             nuevo_cliente['edad'] = st.slider(
                                 "Edad:", edad_min, edad_max, 
-                                value=int(df['edad'].median())
+                                value=default_edad,
+                                key="edad_slider"
                             )
+                            st.session_state.nuevo_cliente_data['edad'] = nuevo_cliente['edad']
                         
                         if 'ingresos_anuales' in variables_predictoras:
                             ingresos_min = int(df['ingresos_anuales'].min())
                             ingresos_max = int(df['ingresos_anuales'].max())
+                            default_ingresos = st.session_state.nuevo_cliente_data.get('ingresos_anuales', int(df['ingresos_anuales'].median()))
                             nuevo_cliente['ingresos_anuales'] = st.number_input(
                                 "Ingresos anuales:", 
                                 min_value=ingresos_min, 
                                 max_value=ingresos_max,
-                                value=int(df['ingresos_anuales'].median())
+                                value=default_ingresos,
+                                key="ingresos_input"
                             )
+                            st.session_state.nuevo_cliente_data['ingresos_anuales'] = nuevo_cliente['ingresos_anuales']
                         
                         # Variables categóricas codificadas
                         if 'genero_encoded' in variables_predictoras:
-                            genero = st.selectbox("Género:", ['M', 'F'])
+                            default_genero_idx = st.session_state.nuevo_cliente_data.get('genero_idx', 0)
+                            genero = st.selectbox("Género:", ['M', 'F'], index=default_genero_idx, key="genero_select")
                             nuevo_cliente['genero_encoded'] = 1 if genero == 'M' else 0
+                            st.session_state.nuevo_cliente_data['genero_idx'] = ['M', 'F'].index(genero)
                         
                         if 'programa_lealtad_encoded' in variables_predictoras:
-                            programa = st.selectbox("Programa de lealtad:", ['No', 'Si'])
+                            default_programa_idx = st.session_state.nuevo_cliente_data.get('programa_idx', 0)
+                            programa = st.selectbox("Programa de lealtad:", ['No', 'Si'], index=default_programa_idx, key="programa_select")
                             nuevo_cliente['programa_lealtad_encoded'] = 1 if programa == 'Si' else 0
+                            st.session_state.nuevo_cliente_data['programa_idx'] = ['No', 'Si'].index(programa)
                     
                     with col2:
                         st.subheader("Comportamiento de Compra")
                         if 'compras_previas' in variables_predictoras:
                             compras_min, compras_max = int(df['compras_previas'].min()), int(df['compras_previas'].max())
+                            default_compras = st.session_state.nuevo_cliente_data.get('compras_previas', int(df['compras_previas'].median()))
                             nuevo_cliente['compras_previas'] = st.slider(
                                 "Compras previas:", compras_min, compras_max,
-                                value=int(df['compras_previas'].median())
+                                value=default_compras,
+                                key="compras_slider"
                             )
+                            st.session_state.nuevo_cliente_data['compras_previas'] = nuevo_cliente['compras_previas']
                         
                         if 'valor_total_historico' in variables_predictoras:
                             valor_min = int(df['valor_total_historico'].min())
                             valor_max = int(df['valor_total_historico'].max())
+                            default_valor = st.session_state.nuevo_cliente_data.get('valor_total_historico', int(df['valor_total_historico'].median()))
                             nuevo_cliente['valor_total_historico'] = st.number_input(
                                 "Valor total histórico:", 
                                 min_value=valor_min, 
                                 max_value=valor_max,
-                                value=int(df['valor_total_historico'].median())
+                                value=default_valor,
+                                key="valor_input"
                             )
+                            st.session_state.nuevo_cliente_data['valor_total_historico'] = nuevo_cliente['valor_total_historico']
                         
                         if 'dias_ultima_compra' in variables_predictoras:
                             dias_min, dias_max = int(df['dias_ultima_compra'].min()), int(df['dias_ultima_compra'].max())
+                            default_dias = st.session_state.nuevo_cliente_data.get('dias_ultima_compra', int(df['dias_ultima_compra'].median()))
                             nuevo_cliente['dias_ultima_compra'] = st.slider(
                                 "Días desde última compra:", dias_min, dias_max,
-                                value=int(df['dias_ultima_compra'].median())
+                                value=default_dias,
+                                key="dias_slider"
                             )
+                            st.session_state.nuevo_cliente_data['dias_ultima_compra'] = nuevo_cliente['dias_ultima_compra']
                     
                     # Continuar con más variables si están disponibles
                     if any(var in variables_predictoras for var in ['visitas_web_ultimo_mes', 'emails_abiertos_ultimo_mes', 'productos_en_wishlist']):
@@ -454,32 +477,44 @@ if df is not None:
                         with col3:
                             if 'visitas_web_ultimo_mes' in variables_predictoras:
                                 visitas_min, visitas_max = int(df['visitas_web_ultimo_mes'].min()), int(df['visitas_web_ultimo_mes'].max())
+                                default_visitas = st.session_state.nuevo_cliente_data.get('visitas_web_ultimo_mes', int(df['visitas_web_ultimo_mes'].median()))
                                 nuevo_cliente['visitas_web_ultimo_mes'] = st.slider(
                                     "Visitas web último mes:", visitas_min, visitas_max,
-                                    value=int(df['visitas_web_ultimo_mes'].median())
+                                    value=default_visitas,
+                                    key="visitas_slider"
                                 )
+                                st.session_state.nuevo_cliente_data['visitas_web_ultimo_mes'] = nuevo_cliente['visitas_web_ultimo_mes']
                             
                             if 'emails_abiertos_ultimo_mes' in variables_predictoras:
                                 emails_min, emails_max = int(df['emails_abiertos_ultimo_mes'].min()), int(df['emails_abiertos_ultimo_mes'].max())
+                                default_emails = st.session_state.nuevo_cliente_data.get('emails_abiertos_ultimo_mes', int(df['emails_abiertos_ultimo_mes'].median()))
                                 nuevo_cliente['emails_abiertos_ultimo_mes'] = st.slider(
                                     "Emails abiertos último mes:", emails_min, emails_max,
-                                    value=int(df['emails_abiertos_ultimo_mes'].median())
+                                    value=default_emails,
+                                    key="emails_slider"
                                 )
+                                st.session_state.nuevo_cliente_data['emails_abiertos_ultimo_mes'] = nuevo_cliente['emails_abiertos_ultimo_mes']
                         
                         with col4:
                             if 'productos_en_wishlist' in variables_predictoras:
                                 wishlist_min, wishlist_max = int(df['productos_en_wishlist'].min()), int(df['productos_en_wishlist'].max())
+                                default_wishlist = st.session_state.nuevo_cliente_data.get('productos_en_wishlist', int(df['productos_en_wishlist'].median()))
                                 nuevo_cliente['productos_en_wishlist'] = st.slider(
                                     "Productos en wishlist:", wishlist_min, wishlist_max,
-                                    value=int(df['productos_en_wishlist'].median())
+                                    value=default_wishlist,
+                                    key="wishlist_slider"
                                 )
+                                st.session_state.nuevo_cliente_data['productos_en_wishlist'] = nuevo_cliente['productos_en_wishlist']
                             
                             if 'antiguedad_meses' in variables_predictoras:
                                 antiguedad_min, antiguedad_max = int(df['antiguedad_meses'].min()), int(df['antiguedad_meses'].max())
+                                default_antiguedad = st.session_state.nuevo_cliente_data.get('antiguedad_meses', int(df['antiguedad_meses'].median()))
                                 nuevo_cliente['antiguedad_meses'] = st.slider(
                                     "Antigüedad (meses):", antiguedad_min, antiguedad_max,
-                                    value=int(df['antiguedad_meses'].median())
+                                    value=default_antiguedad,
+                                    key="antiguedad_slider"
                                 )
+                                st.session_state.nuevo_cliente_data['antiguedad_meses'] = nuevo_cliente['antiguedad_meses']
                     
                     # Agregar variables restantes de forma dinámica
                     variables_restantes = [var for var in variables_predictoras if var not in nuevo_cliente.keys()]
@@ -490,19 +525,46 @@ if df is not None:
                             with cols[i % 2]:
                                 if var in df.columns:
                                     var_min, var_max = df[var].min(), df[var].max()
+                                    default_val = st.session_state.nuevo_cliente_data.get(var, df[var].median())
+                                    
                                     if df[var].dtype in ['int64', 'int32']:
                                         nuevo_cliente[var] = st.slider(
                                             f"{var}:", int(var_min), int(var_max),
-                                            value=int(df[var].median())
+                                            value=int(default_val),
+                                            key=f"{var}_slider"
                                         )
                                     else:
                                         nuevo_cliente[var] = st.number_input(
                                             f"{var}:", min_value=float(var_min), max_value=float(var_max),
-                                            value=float(df[var].median())
+                                            value=float(default_val),
+                                            key=f"{var}_input"
                                         )
+                                    st.session_state.nuevo_cliente_data[var] = nuevo_cliente[var]
                     
-                    # Botón para hacer predicción
-                    if st.button("🔮 Predecir Compra"):
+                    # Botones para resetear y predecir
+                    col_btn1, col_btn2 = st.columns(2)
+                    
+                    with col_btn1:
+                        if st.button("🔄 Resetear Valores"):
+                            st.session_state.nuevo_cliente_data = {}
+                            st.rerun()
+                    
+                    with col_btn2:
+                        predecir_btn = st.button("🔮 Predecir Compra")
+                        # Crear DataFrame con los datos del nuevo cliente
+                        df_nuevo_cliente = pd.DataFrame([nuevo_cliente])
+                        
+                        # Asegurar que todas las variables estén presentes
+                        for var in variables_predictoras:
+                            if var not in df_nuevo_cliente.columns:
+                                df_nuevo_cliente[var] = 0  # valor por defecto
+                        
+                        # Reordenar columnas para coincidir con el entrenamiento
+                        df_nuevo_cliente = df_nuevo_cliente[variables_predictoras]
+                        
+                    
+                    # Lógica de predicción
+                    if predecir_btn:
                         # Crear DataFrame con los datos del nuevo cliente
                         df_nuevo_cliente = pd.DataFrame([nuevo_cliente])
                         
@@ -516,7 +578,6 @@ if df is not None:
                         
                         # Hacer predicción
                         try:
-                            if algoritmo in ["Logistic Regression", "SVM"] and scaler:
                                 X_nuevo_scaled = scaler.transform(df_nuevo_cliente)
                                 prediccion = modelo.predict(X_nuevo_scaled)[0]
                                 probabilidad = modelo.predict_proba(X_nuevo_scaled)[0, 1]
