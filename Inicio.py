@@ -381,5 +381,185 @@ if df is not None:
                     mime="text/csv"
                 )
                 
+                # Sección para predecir cliente individual
+                st.header("🎯 Predicción para Cliente Individual")
+                st.markdown("Ingresa los datos de un nuevo cliente para obtener una predicción:")
+                
+                with st.expander("📝 Ingresar datos del cliente"):
+                    # Crear formulario para nuevo cliente
+                    col1, col2 = st.columns(2)
+                    
+                    nuevo_cliente = {}
+                    
+                    # Obtener rangos de las variables para establecer límites realistas
+                    with col1:
+                        st.subheader("Datos Demográficos")
+                        if 'edad' in variables_predictoras:
+                            edad_min, edad_max = int(df['edad'].min()), int(df['edad'].max())
+                            nuevo_cliente['edad'] = st.slider(
+                                "Edad:", edad_min, edad_max, 
+                                value=int(df['edad'].median())
+                            )
+                        
+                        if 'ingresos_anuales' in variables_predictoras:
+                            ingresos_min = int(df['ingresos_anuales'].min())
+                            ingresos_max = int(df['ingresos_anuales'].max())
+                            nuevo_cliente['ingresos_anuales'] = st.number_input(
+                                "Ingresos anuales:", 
+                                min_value=ingresos_min, 
+                                max_value=ingresos_max,
+                                value=int(df['ingresos_anuales'].median())
+                            )
+                        
+                        # Variables categóricas codificadas
+                        if 'genero_encoded' in variables_predictoras:
+                            genero = st.selectbox("Género:", ['M', 'F'])
+                            nuevo_cliente['genero_encoded'] = 1 if genero == 'M' else 0
+                        
+                        if 'programa_lealtad_encoded' in variables_predictoras:
+                            programa = st.selectbox("Programa de lealtad:", ['No', 'Si'])
+                            nuevo_cliente['programa_lealtad_encoded'] = 1 if programa == 'Si' else 0
+                    
+                    with col2:
+                        st.subheader("Comportamiento de Compra")
+                        if 'compras_previas' in variables_predictoras:
+                            compras_min, compras_max = int(df['compras_previas'].min()), int(df['compras_previas'].max())
+                            nuevo_cliente['compras_previas'] = st.slider(
+                                "Compras previas:", compras_min, compras_max,
+                                value=int(df['compras_previas'].median())
+                            )
+                        
+                        if 'valor_total_historico' in variables_predictoras:
+                            valor_min = int(df['valor_total_historico'].min())
+                            valor_max = int(df['valor_total_historico'].max())
+                            nuevo_cliente['valor_total_historico'] = st.number_input(
+                                "Valor total histórico:", 
+                                min_value=valor_min, 
+                                max_value=valor_max,
+                                value=int(df['valor_total_historico'].median())
+                            )
+                        
+                        if 'dias_ultima_compra' in variables_predictoras:
+                            dias_min, dias_max = int(df['dias_ultima_compra'].min()), int(df['dias_ultima_compra'].max())
+                            nuevo_cliente['dias_ultima_compra'] = st.slider(
+                                "Días desde última compra:", dias_min, dias_max,
+                                value=int(df['dias_ultima_compra'].median())
+                            )
+                    
+                    # Continuar con más variables si están disponibles
+                    if any(var in variables_predictoras for var in ['visitas_web_ultimo_mes', 'emails_abiertos_ultimo_mes', 'productos_en_wishlist']):
+                        st.subheader("Engagement Digital")
+                        col3, col4 = st.columns(2)
+                        
+                        with col3:
+                            if 'visitas_web_ultimo_mes' in variables_predictoras:
+                                visitas_min, visitas_max = int(df['visitas_web_ultimo_mes'].min()), int(df['visitas_web_ultimo_mes'].max())
+                                nuevo_cliente['visitas_web_ultimo_mes'] = st.slider(
+                                    "Visitas web último mes:", visitas_min, visitas_max,
+                                    value=int(df['visitas_web_ultimo_mes'].median())
+                                )
+                            
+                            if 'emails_abiertos_ultimo_mes' in variables_predictoras:
+                                emails_min, emails_max = int(df['emails_abiertos_ultimo_mes'].min()), int(df['emails_abiertos_ultimo_mes'].max())
+                                nuevo_cliente['emails_abiertos_ultimo_mes'] = st.slider(
+                                    "Emails abiertos último mes:", emails_min, emails_max,
+                                    value=int(df['emails_abiertos_ultimo_mes'].median())
+                                )
+                        
+                        with col4:
+                            if 'productos_en_wishlist' in variables_predictoras:
+                                wishlist_min, wishlist_max = int(df['productos_en_wishlist'].min()), int(df['productos_en_wishlist'].max())
+                                nuevo_cliente['productos_en_wishlist'] = st.slider(
+                                    "Productos en wishlist:", wishlist_min, wishlist_max,
+                                    value=int(df['productos_en_wishlist'].median())
+                                )
+                            
+                            if 'antiguedad_meses' in variables_predictoras:
+                                antiguedad_min, antiguedad_max = int(df['antiguedad_meses'].min()), int(df['antiguedad_meses'].max())
+                                nuevo_cliente['antiguedad_meses'] = st.slider(
+                                    "Antigüedad (meses):", antiguedad_min, antiguedad_max,
+                                    value=int(df['antiguedad_meses'].median())
+                                )
+                    
+                    # Agregar variables restantes de forma dinámica
+                    variables_restantes = [var for var in variables_predictoras if var not in nuevo_cliente.keys()]
+                    if variables_restantes:
+                        st.subheader("Otras Variables")
+                        cols = st.columns(2)
+                        for i, var in enumerate(variables_restantes):
+                            with cols[i % 2]:
+                                if var in df.columns:
+                                    var_min, var_max = df[var].min(), df[var].max()
+                                    if df[var].dtype in ['int64', 'int32']:
+                                        nuevo_cliente[var] = st.slider(
+                                            f"{var}:", int(var_min), int(var_max),
+                                            value=int(df[var].median())
+                                        )
+                                    else:
+                                        nuevo_cliente[var] = st.number_input(
+                                            f"{var}:", min_value=float(var_min), max_value=float(var_max),
+                                            value=float(df[var].median())
+                                        )
+                    
+                    # Botón para hacer predicción
+                    if st.button("🔮 Predecir Compra"):
+                        # Crear DataFrame con los datos del nuevo cliente
+                        df_nuevo_cliente = pd.DataFrame([nuevo_cliente])
+                        
+                        # Asegurar que todas las variables estén presentes
+                        for var in variables_predictoras:
+                            if var not in df_nuevo_cliente.columns:
+                                df_nuevo_cliente[var] = 0  # valor por defecto
+                        
+                        # Reordenar columnas para coincidir con el entrenamiento
+                        df_nuevo_cliente = df_nuevo_cliente[variables_predictoras]
+                        
+                        # Hacer predicción
+                        try:
+                            if algoritmo in ["Logistic Regression", "SVM"] and scaler:
+                                X_nuevo_scaled = scaler.transform(df_nuevo_cliente)
+                                prediccion = modelo.predict(X_nuevo_scaled)[0]
+                                probabilidad = modelo.predict_proba(X_nuevo_scaled)[0, 1]
+                            else:
+                                prediccion = modelo.predict(df_nuevo_cliente)[0]
+                                probabilidad = modelo.predict_proba(df_nuevo_cliente)[0, 1]
+                            
+                            # Mostrar resultado
+                            st.subheader("🎯 Resultado de la Predicción")
+                            
+                            col1, col2 = st.columns(2)
+                            
+                            with col1:
+                                if prediccion == 1:
+                                    st.success("✅ **EL CLIENTE COMPRARÁ**")
+                                else:
+                                    st.error("❌ **EL CLIENTE NO COMPRARÁ**")
+                            
+                            with col2:
+                                st.metric("Probabilidad de Compra", f"{probabilidad*100:.1f}%")
+                            
+                            # Interpretación de la probabilidad
+                            st.subheader("📊 Interpretación")
+                            
+                            if probabilidad >= 0.8:
+                                st.success(f"🎯 **Muy Alta Probabilidad ({probabilidad*100:.1f}%)**\n\n"
+                                         "**Recomendación:** Cliente ideal para campañas premium o productos de alto valor.")
+                            elif probabilidad >= 0.6:
+                                st.info(f"📈 **Alta Probabilidad ({probabilidad*100:.1f}%)**\n\n"
+                                       "**Recomendación:** Buen candidato para ofertas especiales o promociones.")
+                            elif probabilidad >= 0.4:
+                                st.warning(f"⚖️ **Probabilidad Moderada ({probabilidad*100:.1f}%)**\n\n"
+                                          "**Recomendación:** Considera descuentos atractivos o incentivos adicionales.")
+                            else:
+                                st.error(f"📉 **Baja Probabilidad ({probabilidad*100:.1f}%)**\n\n"
+                                        "**Recomendación:** Enfócate en otros clientes o usa estrategias de reactivación.")
+                            
+                            # Mostrar datos del cliente para referencia
+                            with st.expander("Ver datos del cliente ingresado"):
+                                st.dataframe(df_nuevo_cliente)
+                        
+                        except Exception as e:
+                            st.error(f"Error al hacer la predicción: {str(e)}")
+                
 else:
     st.info("Carga un dataset para comenzar el análisis predictivo.")
