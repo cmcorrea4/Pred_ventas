@@ -17,7 +17,19 @@ st.set_page_config(
 )
 st.title("🔮 Predicción de Compras con IA")
 st.markdown("Predice si un cliente comprará usando Machine Learning")
-st.image("logo_sume_blanco.png",width=150)
+#st.image("logo_sume_blanco.png",width=150)
+
+from PIL import Image
+
+# Carga tu logo
+logo = Image.open("logo_sume_blanco.png")
+
+# Opción A: Mostrarlo en la cabecera
+#st.image(logo, width=200)
+
+# Opción B: Mostrarlo en la barra lateral
+st.sidebar.image(logo, width=150)
+
 
 
 # Función para cargar datos
