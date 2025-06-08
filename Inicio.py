@@ -15,7 +15,7 @@ st.set_page_config(
     page_icon="🔮",
     layout="wide"
 )
-st.image("logo_sume_blanco.png")
+st.image("logo_sume_blanco.png",width=200)
 st.title("🔮 Predicción de Compras con IA")
 st.markdown("Predice si un cliente comprará usando Machine Learning")
 
