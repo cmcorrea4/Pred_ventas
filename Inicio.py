@@ -28,7 +28,7 @@ logo = Image.open("logo_sume_blanco.png")
 #st.image(logo, width=200)
 
 # Opción B: Mostrarlo en la barra lateral
-st.sidebar.image(logo, width=150)
+st.sidebar.image(logo, width=200)
 
 
 
